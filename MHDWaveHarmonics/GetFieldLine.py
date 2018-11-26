@@ -1,5 +1,5 @@
 import numpy as np
-from Tracing import RK4 as rk4
+from FieldTracing import RK4 as rk4
 import inspect
 from scipy.interpolate import InterpolatedUnivariateSpline
 from scipy.optimize import minimize
@@ -19,10 +19,10 @@ else:
 	Globals.kt17_loaded = True
 
 try:
-	import Geopack as gp
+	import PyGeopack as gp
 except:
 	try:
-		import Models.Geopack as gp
+		import Models.PyGeopack as gp
 	except:	
 		print('Geopack module not found')
 	else:

@@ -1,5 +1,5 @@
 import numpy as np
-from Tracing import RK4 as rk4
+from FieldTracing import RK4 as rk4
 from scipy.interpolate import InterpolatedUnivariateSpline
 
 	
