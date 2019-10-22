@@ -7,28 +7,123 @@ from .SolveWave import SolveWave
 from scipy.interpolate import InterpolatedUnivariateSpline,interp1d
 #from Plotting.AddPlotLabel import AddPlotLabel
 
-def PlotHarmonics(pos,Params,nh=3,Model='KT14',StepSize=None,ModelArgs=None,Delta=None,df=1.0,Rp=1.0,Core=True,Colours=None,Method='Complex'):
+def PlotHarmonics(pos,Params,nh=3,df=1.0,Rp=1.0,Colours=None,Method='Complex',**kwargs):
 	'''
 	Plots structure of toroidal and poloidal harmonics of a given field line and plasma model.
 	
-	Args:
+	Inputs
+	======
 		pos: This is the initial starting positional vector p = np.array([x,y,z]).
 		Params: For power law: 2-element array/list [p_eq,power].
 				For Sandhu model: 5-element array/list [n0,alpha,a,beta,mav0] (see GetSandhuParams).
-		Model: Model field name -- 'KT14'|'T96'|'Dipole'
-		StepSize: Trace step size in Rp (default = None).
-		ModelArgs: 	Tuple containing arguments for the magnetic field models
-		Delta: Separation between two traced field lines
+
 		df: Frequency step size in mHz (default=1.0), smaller values should be used when expecting very low frequencies (not used when Complex method is being use).
 		nh: Number of harmonics to search for.
 		Rp: Planetary radius (can also be set to 'Mercury' of 'Earth')
-		Core: only applicable to Mercury - will include trace to the core of the planet
 		Colours: array of colours used for plotting the harmonics.
 		Method: Set to 'Complex' or 'Simple' to use either complex or simple shooting method.
+		
+
+	Keyword Args
+	============
+		The following keyword argument form **kwargs - they are completely 
+		optional and depend on which model is being used.
+		
+		Model		kwargs
+		T89			iopt,Kp,Vx,Vy,Vz,tilt,CoordIn,CoordOut,Alt,MaxLen,DSMax,FlattenSingleTraces,Verbose
+		T96			parmod,Pdyn,SymH,By,Bz,Vx,Vy,Vz,tilt,CoordIn,CoordOut,Alt,MaxLen,DSMax,FlattenSingleTraces,Verbose
+		T01			parmod,Pdyn,SymH,By,Bz,Vx,Vy,Vz,tilt,CoordIn,CoordOut,Alt,MaxLen,DSMax,FlattenSingleTraces,Verbose
+		TS05		parmod,Pdyn,SymH,By,Bz,Vx,Vy,Vz,tilt,CoordIn,CoordOut,Alt,MaxLen,DSMax,FlattenSingleTraces,Verbose
+		KT17
+		
+		
+		MaxStepSize: Trace step size maximum in Rp (default = None).
+		ModelArgs: 	Tuple containing arguments for the magnetic field models, 
+					when set to None, a set of default parameters are used.
+					'T89'|'T96'|'T01'|'TS05'|'T89c'|'T96c'|'T01c'|'TS05c': 
+						ModelArgs = (Date,ut,CoordIn,CoordOut,Alt,MaxLen,DSMax,iopt,parmod,tilt,Vx,Vy,Vz)
+						****NOTE****
+						When using models 'T89'|'T96'|'T01'|'TS05' - the iopt,parmod,tilt,Vx,Vy,Vz parameters need not
+						be specified as they will be calculated automatically within the Geopack model from Omni data
+						using the Date and ut parameters
+						
+						To use those parameters, add 'c' tot he model name string: 'T89c'|'T96c'|'T01c'|'TS05c'
+						Then all parameters will be needed
+						
+						************
+						Date:  Date in format yyyymmdd.
+						UT: Time in format hh.hh (hh + mm/60.0 + ss/3600.0).
+						CoordIn: Coordinate system of input position, by default 'SM' (Solar-Magnetic), can be set to 'GSM' (Geocentric Solar Magnetospheric).
+						CoordOut: Coordinate system of output positions and field vectors, by default 'SM', can be set to 'GSM'.
+						Alt: Altitude to stop tracing at - default = 100km
+						MaxLen: maximum number of trace steps
+						DSMax: Maximum step size
+						iopt: integer for controlling T89c model
+						parmod: 10-element floating point array to control T96c,T01c and TS05c models,
+								for T96:
+									parmod[0] = Pdyn (nPa)
+									parmod[1] = Dst (nT)
+									parmod[2] = IMF By (nT)
+									parmod[3] = IMF Bz (nT)
+								for T01:
+									parmod[0] = Pdyn (nPa)
+									parmod[1] = Dst (nT)
+									parmod[2] = IMF By (nT)
+									parmod[3] = IMF Bz (nT)
+									parmod[4] = G1 parameter (See Tsyganenko [2001])
+									parmod[5] = G2 parameter (See Tsyganenko [2001])
+								for TS05:
+									parmod[0] = Pdyn (nPa)
+									parmod[1] = Dst (nT)
+									parmod[2] = IMF By (nT)
+									parmod[3] = IMF Bz (nT)
+									parmod[4] = W1 parameter (See Tsyganenko and Sitnov [2005])
+									parmod[5] = W2 parameter (See Tsyganenko and Sitnov [2005])	
+									parmod[6] = W3 parameter (See Tsyganenko and Sitnov [2005])
+									parmod[7] = W4 parameter (See Tsyganenko and Sitnov [2005])
+									parmod[8] = W5 parameter (See Tsyganenko and Sitnov [2005])
+									parmod[9] = W6 parameter (See Tsyganenko and Sitnov [2005])		
+						tilt: Geodipole tilt angle - if set to NaN then will be calculated using Date and ut
+						Vx,Vy,Vz: IMF velocity components
+					KT17:
+						ModelArgs = (Rsun,DistIndex,MaxLen,InitStep,MaxStepSize,LimType)
+						Rsun: radial distance from the Sun in AU
+						DistIndex: Disturbance index (0.0 - 100.0)
+						MaxLen: Maximum number of steps for trace
+						InitStep: Starting step size.
+						MaxStepSize: Maximum step size
+						LimType: Integer value to define where to stop the field trace (default 0):
+							0: Terminate trace at planet surface and magnetopause
+							1: Confine to box -6 < x < 2, -4 < y < 4, -4 < z < 4
+							2: Confine to box and terminate at planet
+							3: Terminate trace at planet
+							4: Trace to MP, Planet and stop at 10Rm
+								
+					KT14:
+						ModelArgs = (MaxLen,InitStep,MaxStep,LimType,Rsm,t1,t2)
+						MaxLen: Maximum number of steps for trace
+						InitStep: Starting step size.
+						MaxStepSize: Maximum step size
+						LimType: Integer value to define where to stop the field trace (default 0):
+							0: Terminate trace at planet surface and magnetopause
+							1: Confine to box -6 < x < 2, -4 < y < 4, -4 < z < 4
+							2: Confine to box and terminate at planet
+							3: Terminate trace at planet
+							4: Trace to MP, Planet and stop at 10Rm
+						Rsm: Subsolar magnetopause radius (default=1.42).
+						t1: Tail disk current strength (default=7.37).
+						t2: Tail quasi-harris current sheet strength (default=2.16).
+					Dipole:
+						ModelArgs = [Beq]
+						Beq: Megnatic field strength at equator in nT (Default=-31200.0).
+		Delta: Separation between two traced field lines
+		Polarization: 'none'|'toroidal'|'poloidal'
+		Core: This only applies to the KT14/KT17 field, as it will include tracing to the core of the planet rather than the surface.		
 	 
 	'''
-	Tp,Sp,hp = GetFieldLine(pos,Model,StepSize,ModelArgs,Delta,Polarization='poloidal',Core=Core)
-	Tt,St,ht = GetFieldLine(pos,Model,StepSize,ModelArgs,Delta,Polarization='toroidal',Core=Core)
+	Tp,Sp,hp = GetFieldLine(pos,Polarization='poloidal',**kwargs)
+	Tt,St,ht = GetFieldLine(pos,Polarization='toroidal',**kwargs)
+	Core = kwargs.get('Core',True)
 
 	#find crossing over z = 0
 	n = np.where(Tt.z >= 0.0)[0]
