@@ -121,7 +121,7 @@ def PlotHarmonics(pos,Params,nh=3,Model='KT14',StepSize=None,ModelArgs=None,Delt
 	lbl = ax0.get_yticklabels()
 	ax0.set_yticklabels(['']*np.size(lbl))	
 	R = ax0.axis()
-	ax.text(0.05*(R[1]-R[0])+R[0],0.9*(R[3]-R[2])+R[2],'(a)',ha='center',va='center')
+	ax0.text(0.05*(R[1]-R[0])+R[0],0.9*(R[3]-R[2])+R[2],'(a)',ha='center',va='center')
 	
 	ax1 = fig.subplot2grid((2,1),(1,0))
 	for i in range(0,nh):

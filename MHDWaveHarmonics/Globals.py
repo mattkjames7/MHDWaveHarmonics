@@ -6,6 +6,57 @@ from numpy.ctypeslib import ndpointer
 kt17_loaded=False
 geopack_loaded = False
 
+DefArgs = { 'KT14':	{	'Params':	[1.42,7.37,2.16],
+						'maxlen':	1000,
+						'initstep':	0.025,
+						'maxstep':	0.025,
+						'LimType': 57,
+						'FlattenSingleTraces':	True,
+						'SmoothSurfaceTransition': False,
+						'AssumeOutsidePlanet': True	},
+			'KT17':	{	'Params':	[0.387,50.0],
+						'maxlen':	1000,
+						'initstep':	0.025,
+						'maxstep':	0.025,
+						'LimType': 57,
+						'FlattenSingleTraces':	True,
+						'SmoothSurfaceTransition': False,
+						'AssumeOutsidePlanet': True	},
+			'T89':	{	'CoordIn':	'SM',
+						'CoordOut':	'SM',
+						'alt':	100.0,
+						'MaxLen':	1000,
+						'DSMax':	0.1,
+						'FlattenSingleTraces': True,
+						'Verbose':	False},
+			'T96':	{	'CoordIn':	'SM',
+						'CoordOut':	'SM',
+						'alt':	100.0,
+						'MaxLen':	1000,
+						'DSMax':	0.1,
+						'FlattenSingleTraces': True,
+						'Verbose':	False},
+			'T01':	{	'CoordIn':	'SM',
+						'CoordOut':	'SM',
+						'alt':	100.0,
+						'MaxLen':	1000,
+						'DSMax':	0.1,
+						'FlattenSingleTraces': True,
+						'Verbose':	False},
+			'TS05':	{	'CoordIn':	'SM',
+						'CoordOut':	'SM',
+						'alt':	100.0,
+						'MaxLen':	1000,
+						'DSMax':	0.1,
+						'FlattenSingleTraces': True,
+						'Verbose':	False},
+			'Dipole':{	'ds':	0.1,
+						'Beq':	-31200.0,
+						'nmax':	10000,
+						'bounds':	[1.0,100.0] }}
+						
+						
+
 DataPath = os.path.dirname(__file__)+'/__data/'
 
 libwh = ctypes.CDLL(DataPath+'libwh/libwh.so')

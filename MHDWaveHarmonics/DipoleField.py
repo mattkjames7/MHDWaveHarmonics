@@ -32,12 +32,12 @@ def GetDipoleModel(Beq):
 		
 	return DipoleField
 	
-class TraceDipoleField(object):
+class TraceField(object):
 	'''
 		Provides the trace along a field line in dipole field model.
 		
 		Args:
-			p: This is the initial starting positional vector p = np.array([x,y,z]).
+			xin,yin,zin: Starting coordinates.
 			ds: Step size in Rp.
 			Beq: Equatorial field strength.
 			nmax: Maximum number of steps to be taken.
@@ -57,7 +57,8 @@ class TraceDipoleField(object):
 				NOTE: lshell and mlte are both NaN if the field line is open. 
 			
 	'''
-	def __init__(self,p,ds,Beq,nmax=10000,bounds=[1.0,100.0]):
+	def __init__(self,xin,yin,zin,ds=0.1,Beq=-31200.0,nmax=10000,bounds=[1.0,100.0],**kwargs):
+		p = np.array([xin,yin,zin])
 		BFn = GetDipoleModel(Beq)
 		T = rk4.RK4Trace(np.array([p]),ds,BFn,n=nmax,bounds=bounds,direction='both')
 		good = np.where(np.isfinite(T[:,0]))[0]
