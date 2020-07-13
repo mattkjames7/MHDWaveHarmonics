@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="MHDWaveHarmonics",
-    version="0.0.2",
+    version="0.0.3",
     author="Matthew Knight James",
     author_email="mattkjames7@gmail.com",
     description="Some simple tools for modelling MHD wave harmonics in an arbitrary magnetic field geometry.",
@@ -24,7 +24,7 @@ setuptools.setup(
 		'numpy',
 		'scipy',
 		'matplotlib',
-		'PyGeopack',
+		'PyGeopack>=0.2.7',
 		'FieldTracing',
 	],
 	include_package_data=True,

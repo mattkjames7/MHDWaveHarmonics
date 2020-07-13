@@ -67,7 +67,7 @@ def SolveWave(f,x,B,R=None,Va=None,halpha=None,Params=None,InPlanet=None,Method=
 			print("Please either supply an array of Va, or a set of Params")
 			return None
 		else:
-			Globals._CppSolveWaveVa(_f,_B,_Va,_s,_halpha,_InPlanet,_n,_yr)
+			Globals._CppSolveWaveVa(_f,_B,_Va,_x,_halpha,_InPlanet,_n,_yr)
 			if Unscale:
 				return _yr
 			else:

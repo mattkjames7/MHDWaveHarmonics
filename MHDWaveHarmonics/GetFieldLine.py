@@ -32,6 +32,8 @@ else:
 
 
 def _SortModelDirection(T):
+	if T.nstep == 0:
+		return
 	if T.z[0] > T.z[T.nstep-1]:
 		I = np.arange(T.nstep)
 		O = I[::-1]
@@ -306,7 +308,7 @@ def GetFieldLine(pos,Date=None,ut=None,Model='KT17',Delta=None,Polarization='non
 
 	#return T0,T1,s0,s1
 	d = np.zeros(T0.nstep,dtype='float32')
-
+	#print((s1,T1.x[0:s1.size]))
 	fx = InterpolatedUnivariateSpline(s1,T1.x[0:s1.size])
 	fy = InterpolatedUnivariateSpline(s1,T1.y[0:s1.size])
 	fz = InterpolatedUnivariateSpline(s1,T1.z[0:s1.size])
