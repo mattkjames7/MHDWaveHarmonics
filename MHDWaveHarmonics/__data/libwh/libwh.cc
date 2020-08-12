@@ -47,7 +47,7 @@ float GetRefractiveIndex() {
 	return RefIndex;
 }
 
-void CalcFieldLineVa(float *B, float *R,  float *s, float *halpha, float *InPlanet, int n, float *Params, int nP, float maxR, float *Va) {
+void CalcFieldLineVa(float *B, float *R,  float *s, float *halpha, float *InPlanet, float *RhoBG, int n, float *Params, int nP, float maxR, float *Va) {
 	/*
 	 *	This Function will calculate the Alfven speed along the field line. 
 	 * 
@@ -73,6 +73,7 @@ void CalcFieldLineVa(float *B, float *R,  float *s, float *halpha, float *InPlan
 	 * 			along the field line: mav = mav0*(R/Rmax)**-beta
 	 * 		nP: Integer number of parameters given in Params
 	 * 		maxR: Maximum radial distance along the field line (Rp).
+	 * 		RhoBG: background plasma profile
 	 * 
 	 * Output:
 	 * 		Va: Alfven speed along the field line in km/s
@@ -93,7 +94,7 @@ void CalcFieldLineVa(float *B, float *R,  float *s, float *halpha, float *InPlan
 				mav = Params[4]*pow(Rnorm,-Params[3])*amu; //this is in kg now
 				ne = Params[2]*exp(-0.5*pow((Rnorm-1.0)/0.1,2.0)) + Params[0]*pow(Rnorm,-Params[1]);
 				ne *= 1e6; //convert to m-3
-				Va[i] = ((B[i]*1.0e-9)/sqrt(mu0*ne*mav))/1000.0;	
+				Va[i] = ((B[i]*1.0e-9)/sqrt(mu0*(ne*mav + RhoBG[i]*1e6*amu)))/1000.0;	
 			} else {
 				HasTransition = true;
 			}		
@@ -104,7 +105,7 @@ void CalcFieldLineVa(float *B, float *R,  float *s, float *halpha, float *InPlan
 				Va[i] = 3e5/RefIndex;
 			} else if (InPlanet[i] == 0.0) {
 				Rnorm = (maxR/R[i]);
-				Va[i] = ((B[i]*1.0e-9)/sqrt(mu0*amu*1.0e6*Params[0]*pow(Rnorm,Params[1])))/1000.0;
+				Va[i] = ((B[i]*1.0e-9)/sqrt(mu0*amu*1.0e6*(Params[0]*pow(Rnorm,Params[1]) + RhoBG[i])))/1000.0;
 			} else {
 				HasTransition = true;
 			}
@@ -160,7 +161,7 @@ void CalcFieldLineVa(float *B, float *R,  float *s, float *halpha, float *InPlan
 
 
 
-void CalcFieldLineVaMid(float *B, float *R,  float *s, float *halpha, float *InPlanet, int n, float *Params, int nP, float maxR, float *Vamid) {
+void CalcFieldLineVaMid(float *B, float *R,  float *s, float *halpha, float *InPlanet, float *RhoBG, int n, float *Params, int nP, float maxR, float *Vamid) {
 	/*
 	 *	This Function will calculate the Alfven speed along the field line at 
 	 * 	the midpoints between field line steps. 
@@ -195,7 +196,7 @@ void CalcFieldLineVaMid(float *B, float *R,  float *s, float *halpha, float *InP
 	float Va[n];
 	int i;
 	
-	CalcFieldLineVa(B,R,s,halpha,InPlanet,n,Params,nP,maxR,Va);
+	CalcFieldLineVa(B,R,s,halpha,InPlanet,RhoBG,n,Params,nP,maxR,Va);
 	
 	/* create Linterp object*/
 	Linterp VaInt(s,Va,n);
@@ -238,7 +239,7 @@ void Calcdlndx(float *B, float *s, float *halpha, float *InPlanet, int n, float 
 }
 
 
-void SolveWaveWrapper(float f, float *B, float *R,  float *s, float *halpha, float *InPlanet, int n, float *Params, int nP, float maxR, float *y) {
+void SolveWaveWrapper(float f, float *B, float *R,  float *s, float *halpha, float *InPlanet, float *RhoBG, int n, float *Params, int nP, float maxR, float *y) {
 	/*
 	 *	This Function will shoot a wave with a given frequency along a field line.
 	 * 
@@ -275,7 +276,7 @@ void SolveWaveWrapper(float f, float *B, float *R,  float *s, float *halpha, flo
 	float dlndx[n-1];
 	
 	/* populate Va array */
-	CalcFieldLineVaMid(B,R,s,halpha,InPlanet,n,Params,nP,maxR,Va);
+	CalcFieldLineVaMid(B,R,s,halpha,InPlanet,RhoBG,n,Params,nP,maxR,Va);
 	
 	
 	/* work out dlndx array */
@@ -286,7 +287,7 @@ void SolveWaveWrapper(float f, float *B, float *R,  float *s, float *halpha, flo
 }
 
 
-void SolveWaveComplexWrapper(float f, float *B, float *R,  float *s, float *halpha, float *InPlanet, int n, float *Params, int nP, float maxR, float *yr, float *yi, float *phase, float *mxr, float *mxi) {
+void SolveWaveComplexWrapper(float f, float *B, float *R,  float *s, float *halpha, float *InPlanet, float *RhoBG, int n, float *Params, int nP, float maxR, float *yr, float *yi, float *phase, float *mxr, float *mxi) {
 	/*
 	 *	This Function will shoot a wave with a given frequency along a field line.
 	 * 
@@ -327,7 +328,7 @@ void SolveWaveComplexWrapper(float f, float *B, float *R,  float *s, float *halp
 	float dlndx[n-1];
 
 	/* populate Va array */
-	CalcFieldLineVaMid(B,R,s,halpha,InPlanet,n,Params,nP,maxR,Va);
+	CalcFieldLineVaMid(B,R,s,halpha,InPlanet,RhoBG,n,Params,nP,maxR,Va);
 	
 	
 	/* work out dlndx array */
@@ -374,7 +375,7 @@ void SolveWaveWrapperVa(float f, float *B, float *Va,  float *s, float *halpha, 
 	SolveWave(f,s,n,Vamid,dlndx,y);
 }
 
-void FindHarmonicsComplexWrapper(float *B, float *R, float *s, float *halpha, float *InPlanet, int n, float *Params, int nP, float maxR, int *HarmInds, int nh, float *x0, bool *Success, int *nIter, float *freqs) {
+void FindHarmonicsComplexWrapper(float *B, float *R, float *s, float *halpha, float *InPlanet, float *RhoBG, int n, float *Params, int nP, float maxR, int *HarmInds, int nh, float *x0, bool *Success, int *nIter, float *freqs) {
 	/*
 	 *	This function is a wrapper for the "FindHarmonicsComplex" function which
 	 * 	should find the harmonic frequencies of a given field line using
@@ -417,9 +418,9 @@ void FindHarmonicsComplexWrapper(float *B, float *R, float *s, float *halpha, fl
 	 * 			undergone for each frequency.
 	 * 		freqs: float array (of size nh) which will contain the output frequencies in mHz.
 	 */
-	FindHarmonicsComplex(B,R,s,halpha,InPlanet,n,Params,nP,maxR,HarmInds,nh,x0,Success,nIter,freqs);
+	FindHarmonicsComplex(B,R,s,halpha,InPlanet,RhoBG,n,Params,nP,maxR,HarmInds,nh,x0,Success,nIter,freqs);
 }
-void FindHarmonicsWrapper(float *B, float *R, float *s, float *halpha, float *InPlanet, int n, float *Params, int nP, float maxR, float df, int *HarmInds, int nh, float x0, int *nIter, float *freqs) {
+void FindHarmonicsWrapper(float *B, float *R, float *s, float *halpha, float *InPlanet, float *RhoBG, int n, float *Params, int nP, float maxR, float df, int *HarmInds, int nh, float x0, int *nIter, float *freqs) {
 	/*	This a wrapper function which should find the harmonic frequencies 
 	 *  of a given field line using Sam's method.
 	 *	
@@ -457,10 +458,10 @@ void FindHarmonicsWrapper(float *B, float *R, float *s, float *halpha, float *In
 	 * 
 	 */
 
-	FindHarmonics(B,R,s,halpha,InPlanet,n,Params,nP,maxR,df,HarmInds,nh,x0,nIter,freqs);
+	FindHarmonics(B,R,s,halpha,InPlanet,RhoBG,n,Params,nP,maxR,df,HarmInds,nh,x0,nIter,freqs);
 }
 
-void GridMisfitWrapper(float *B, float *R, float *s, float *halpha, float *InPlanet, int n, int ntrace, int *nsteps, float *maxR, float *freqs, int *harms, float *Params, int nP, float df, bool Complex, int nG, float *grid) {
+void GridMisfitWrapper(float *B, float *R, float *s, float *halpha, float *InPlanet, float *RhoBG, int n, int ntrace, int *nsteps, float *maxR, float *freqs, int *harms, float *Params, int nP, float df, bool Complex, int nG, float *grid) {
 	/*
 	 * This function will calculate the frequency misfit for a grid of 
 	 * different parameters.
@@ -499,7 +500,7 @@ void GridMisfitWrapper(float *B, float *R, float *s, float *halpha, float *InPla
 	//B,R,s,halpha,InPlanet should each be flattened arrays of n*ntrace
 	//tlens, maxR, freqs, harms should be a ntrace length array 
 	
-	MisfitObject *misfit = new MisfitObject(B,R,s,halpha,InPlanet,n,ntrace,nsteps,maxR,freqs,harms,df);
+	MisfitObject *misfit = new MisfitObject(B,R,s,halpha,InPlanet,RhoBG,n,ntrace,nsteps,maxR,freqs,harms,df);
 		
 	int i;
 	for (i=0;i<nG;i++) {
@@ -508,7 +509,7 @@ void GridMisfitWrapper(float *B, float *R, float *s, float *halpha, float *InPla
 	delete misfit;
 }
 
-int InitMisfitObject(float *B, float *R, float *s, float *halpha, float *InPlanet, int n, int ntrace, int *nsteps, float *maxR, float *freqs, int *harms, float df) {
+int InitMisfitObject(float *B, float *R, float *s, float *halpha, float *InPlanet, float *RhoBG, int n, int ntrace, int *nsteps, float *maxR, float *freqs, int *harms, float df) {
 	/*
 	 * This function will initialize an object to calculate the frequency 
 	 * misfit for different plasma parameters.
@@ -549,7 +550,7 @@ int InitMisfitObject(float *B, float *R, float *s, float *halpha, float *InPlane
 	MOInsts.push_back(instance);
 	ind = InstanceIndex(instance);
 	
-	vMisfitObjects.push_back(new MisfitObject(B,R,s,halpha,InPlanet,n,ntrace,nsteps,maxR,freqs,harms,df));
+	vMisfitObjects.push_back(new MisfitObject(B,R,s,halpha,InPlanet,RhoBG,n,ntrace,nsteps,maxR,freqs,harms,df));
 	return instance;
 }
 

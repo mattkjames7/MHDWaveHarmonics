@@ -2,7 +2,7 @@ import numpy as np
 from . import Globals
 import ctypes as ct
 
-def CalcFieldLineVa(T,s,Params,halpha=None):
+def CalcFieldLineVa(T,s,Params,halpha=None,RhoBG=None):
 	'''
 	Calculated the Alfven speed along a field line.
 	
@@ -25,6 +25,10 @@ def CalcFieldLineVa(T,s,Params,halpha=None):
 		Ha = halpha.astype('float32')
 	else:
 		Ha = np.ones(np.size(s),dtype='float32')
+	if not RhoBG is None:
+		RhoBG = RhoBG.astype('float32')
+	else:
+		RhoBG = np.zeros(np.size(s),dtype='float32')
 	n = T.nstep
 
 	PAR = np.float32(Params)
@@ -38,12 +42,12 @@ def CalcFieldLineVa(T,s,Params,halpha=None):
 		InPlanet = np.float32(T.R < 1.0)
 		
 	Va = np.zeros(n,dtype='float32')
-	Globals._CppCalcFieldLineVa(Bm,R,S,Ha,InPlanet,n,PAR,nP,maxR,Va)
+	Globals._CppCalcFieldLineVa(Bm,R,S,Ha,InPlanet,RhoBG,n,PAR,nP,maxR,Va)
 	
 	return Va
 	
 	
-def CalcFieldLineVaMid(T,s,Params,halpha=None):
+def CalcFieldLineVaMid(T,s,Params,halpha=None,RhoBG=None):
 	'''
 	Calculated the Alfven speed along a field line.
 	
@@ -66,6 +70,10 @@ def CalcFieldLineVaMid(T,s,Params,halpha=None):
 		Ha = halpha.astype('float32')
 	else:
 		Ha = np.ones(np.size(s),dtype='float32')
+	if not RhoBG is None:
+		RhoBG = RhoBG.astype('float32')
+	else:
+		RhoBG = np.zeros(np.size(s),dtype='float32')
 	n = T.nstep
 
 	PAR = np.float32(Params)
@@ -78,7 +86,7 @@ def CalcFieldLineVaMid(T,s,Params,halpha=None):
 	else:
 		InPlanet = np.float32(T.R < 1.0)
 	Va = np.zeros(n-1,dtype='float32')
-	Globals._CppCalcFieldLineVaMid(Bm,R,S,Ha,InPlanet,n,PAR,nP,maxR,Va)
+	Globals._CppCalcFieldLineVaMid(Bm,R,S,Ha,InPlanet,RhoBG,n,PAR,nP,maxR,Va)
 	
 	return Va
 

@@ -7,7 +7,7 @@ from .SolveWave import SolveWave
 from scipy.interpolate import InterpolatedUnivariateSpline,interp1d
 #from Plotting.AddPlotLabel import AddPlotLabel
 
-def PlotHarmonics(pos,Params,nh=3,df=1.0,Rp=1.0,Colours=None,Method='Complex',**kwargs):
+def PlotHarmonics(pos,Params,nh=3,df=1.0,Rp=1.0,Colours=None,Method='Complex',RhoBG=None,ReturnData=False,**kwargs):
 	'''
 	Plots structure of toroidal and poloidal harmonics of a given field line and plasma model.
 	
@@ -184,15 +184,15 @@ def PlotHarmonics(pos,Params,nh=3,df=1.0,Rp=1.0,Colours=None,Method='Complex',**
 	h2Bp = hp**2 * B
 	h2Bt = ht**2 * B
 
-	fp,_,_ = FindHarmonics(Tp,Sp,Params,hp,np.arange(nh)+1,None,df,Method)
-	ft,_,_ = FindHarmonics(Tt,St,Params,ht,np.arange(nh)+1,None,df,Method)
+	fp,_,_ = FindHarmonics(Tp,Sp,Params,hp,RhoBG,np.arange(nh)+1,None,df,Method)
+	ft,_,_ = FindHarmonics(Tt,St,Params,ht,RhoBG,np.arange(nh)+1,None,df,Method)
 
 	fig = plt
 	fig.figure(figsize=(6,8))
 	
 	ax0 = fig.subplot2grid((2,1),(0,0))
 	for i in range(0,nh):
-		y,_,_= SolveWave(fp[i],Sp,B,Rmag,None,hp,Params,InPlanet)
+		y,_,_= SolveWave(fp[i],Sp,B,Rmag,None,hp,RhoBG,Params,InPlanet)
 
 		y/=hp
 		if i == 0:
@@ -221,7 +221,7 @@ def PlotHarmonics(pos,Params,nh=3,df=1.0,Rp=1.0,Colours=None,Method='Complex',**
 	ax1 = fig.subplot2grid((2,1),(1,0))
 	for i in range(0,nh):
 
-		y,_,_= SolveWave(ft[i],St,B,Rmag,None,ht,Params,InPlanet)
+		y,_,_= SolveWave(ft[i],St,B,Rmag,None,ht,RhoBG,Params,InPlanet)
 		y/=ht
 		if i == 0:
 			ax1.axis([0.0,np.max(St/Rp),-np.max(np.abs(y)),np.max(np.abs(y))])
@@ -267,4 +267,11 @@ def PlotHarmonics(pos,Params,nh=3,df=1.0,Rp=1.0,Colours=None,Method='Complex',**
 		ax1.text(S1,0.5*(R[3]-R[2])+R[2],'Mercury Surface',va='center',color=[0.0,0.0,0.0],zorder=2.0,fontsize='medium',rotation=90.0)
 		
 	fig.tight_layout()
-	return fig
+	
+	if ReturnData:
+		return fig,Tp,Sp,hp,Tt,St,ht 	
+	else:
+		return fig
+
+
+	

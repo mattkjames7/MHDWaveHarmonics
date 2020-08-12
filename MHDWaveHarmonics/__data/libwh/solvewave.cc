@@ -97,7 +97,7 @@ void SolveWaveComplex(float f, float *x, int n, float *Va, float *dlndx, float *
 }
 
 
-void SolveWaveCC(float f, float *x, float *B0, int n, float *Va, float *dlndx, float *yr, float *yi, float *xi, float *phase, float *mxr, float *mxi, float *b, float *E) {
+void SolveWaveCC(float f, float *x, float *B0, float *h, int n, float *Va, float *dlndx, float *yr, float *yi, float *xi, float *phase, float *mxr, float *mxi, float *b, float *E) {
 	/*******************************************************************
 	 * Try solving a wave for the situation where the wave is closed at
 	 * both ends (node at each end)
@@ -111,8 +111,8 @@ void SolveWaveCC(float f, float *x, float *B0, int n, float *Va, float *dlndx, f
 	float yt[] = {0.0,1.0}, yo[2];
 	int i;
 	b[0] = 0.0;
-	bt[0] = 0.0;
-	bt[1] = 1.0;
+	//bt[0] = 0.0;
+	//bt[1] = 1.0;
 	yi[0] = b[i]/(h[i]*B0[i]);
 	
 	
@@ -131,7 +131,7 @@ void SolveWaveCC(float f, float *x, float *B0, int n, float *Va, float *dlndx, f
 
 	/*calculate xi,E,b*/
 	for (i=0;i<n;i++) {
-		xi[i] = yr[i]*h[i]
+		xi[i] = yr[i]*h[i];
 		E[i] = -w*xi[i]*B0[i];
 		b[i] = h[i]*yi[i]*B0[i];
 	}
@@ -164,7 +164,7 @@ void SolveWaveCC(float f, float *x, float *B0, int n, float *Va, float *dlndx, f
 }
 
 
-void SolveWaveOO(float f, float *x, float *B0, int n, float *Va, float *dlndx, float *yr, float *yi, float *xi, float *phase, float *mxr, float *mxi, float *b, float *E) {
+void SolveWaveOO(float f, float *x, float *B0, float *h, int n, float *Va, float *dlndx, float *yr, float *yi, float *xi, float *phase, float *mxr, float *mxi, float *b, float *E) {
 	/*******************************************************************
 	 * Try solving a wave for the situation where the wave is open at
 	 * both ends (antinode at each end)
@@ -191,7 +191,7 @@ void SolveWaveOO(float f, float *x, float *B0, int n, float *Va, float *dlndx, f
 
 	/*calculate xi,E,b*/
 	for (i=0;i<n;i++) {
-		xi[i] = yr[i]*h[i]
+		xi[i] = yr[i]*h[i];
 		E[i] = -w*xi[i]*B0[i];
 		b[i] = h[i]*yi[i]*B0[i];
 	}

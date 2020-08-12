@@ -1,7 +1,7 @@
 #include "findharmonics.h"
 
 
-void FindHarmonics(float *B, float *R, float *s, float *halpha, float *InPlanet, int n, float *Params, int nP, float maxR, float df, int *HarmInds, int nh, float x0, int *nIter, float *freqs) {
+void FindHarmonics(float *B, float *R, float *s, float *halpha, float *InPlanet, float *RhoBG, int n, float *Params, int nP, float maxR, float df, int *HarmInds, int nh, float x0, int *nIter, float *freqs) {
 	if (df <= 0.0) {
 		df = 0.1;
 	}
@@ -53,7 +53,7 @@ void FindHarmonics(float *B, float *R, float *s, float *halpha, float *InPlanet,
 	}
 	
 	/* populate Va array */
-	CalcFieldLineVaMid(B,R,s,halpha,InPlanet,n,Params,nP,maxR,Va);
+	CalcFieldLineVaMid(B,R,s,halpha,InPlanet,RhoBG,n,Params,nP,maxR,Va);
 	
 	
 	/* work out dlndx array */
@@ -112,7 +112,7 @@ void FindHarmonics(float *B, float *R, float *s, float *halpha, float *InPlanet,
 
 
 
-void FindHarmonicsComplex(float *B, float *R, float *s, float *halpha, float *InPlanet, int n, float *Params, int nP, float maxR, int *HarmInds, int nh, float *x0, bool *Success, int *nIter, float *freqs) {
+void FindHarmonicsComplex(float *B, float *R, float *s, float *halpha, float *InPlanet, float *RhoBG, int n, float *Params, int nP, float maxR, int *HarmInds, int nh, float *x0, bool *Success, int *nIter, float *freqs) {
 	/*	This Function should find the harmonic frequencies of a given field line using
 	 * 	the "complex" wave solution, by minimimzing the difference between the output wave
 	 * 	"phase" with n*pi, where n is the requested harmonic number. It's worth noting
@@ -163,7 +163,7 @@ void FindHarmonicsComplex(float *B, float *R, float *s, float *halpha, float *In
 	}
 
 	/* populate Va array */
-	CalcFieldLineVaMid(B,R,s,halpha,InPlanet,n,Params,nP,maxR,Va);
+	CalcFieldLineVaMid(B,R,s,halpha,InPlanet,RhoBG,n,Params,nP,maxR,Va);
 	
 
 	/* work out dlndx array */

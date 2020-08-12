@@ -3,7 +3,7 @@ from .GetFieldLine import GetFieldLine
 from scipy.optimize import minimize
 from .FindHarmonics import FindHarmonics
 
-def GetMisfitFunction(T,s,halpha,f,Params,Harm=1,df=1.0,Method='Complex'):
+def GetMisfitFunction(T,s,halpha,f,Params,Harm=1,df=1.0,Method='Complex',RhoBG=None):
 	'''
 	Returns function that calculated the difference between the desired frequency and the modelled frequency given a plasma mass density.
 	
@@ -32,7 +32,7 @@ def GetMisfitFunction(T,s,halpha,f,Params,Harm=1,df=1.0,Method='Complex'):
 		else:
 			Par[0] = x/Par[-1] #convert peq to neq by dividing by average mass
 			#Par[2] = x
-		fout,_,_ = FindHarmonics(T,s,Par,halpha,[Harm],None,df,Method)
+		fout,_,_ = FindHarmonics(T,s,Par,halpha,RhoBG,[Harm],None,df,Method)
 		misfit = np.abs(f-fout[0])
 		niter += 1
 		if np.size(Par) == 2:
@@ -42,7 +42,7 @@ def GetMisfitFunction(T,s,halpha,f,Params,Harm=1,df=1.0,Method='Complex'):
 		return misfit
 	return CalculateMisfit
 
-def FitPlasmaToHarmonic(T,s,halpha,f,Params,Harm=1,df=1.0,Method='Complex'):
+def FitPlasmaToHarmonic(T,s,halpha,f,Params,Harm=1,df=1.0,Method='Complex',RhoBG=None):
 	'''
 	Numerically find an equatorial plasma mass density that would allow a wave of a given frequency to exist on a field line with a specific power law.
 	
@@ -62,7 +62,7 @@ def FitPlasmaToHarmonic(T,s,halpha,f,Params,Harm=1,df=1.0,Method='Complex'):
 		Plasma mass density in amu/cm^3
 		
 	'''
-	Func = GetMisfitFunction(T,s,halpha,f,Params,Harm,df,Method)
+	Func = GetMisfitFunction(T,s,halpha,f,Params,Harm,df,Method,RhoBG=RhoBG)
 	global niter
 	niter = 0
 

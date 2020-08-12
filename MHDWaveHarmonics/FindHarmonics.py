@@ -4,7 +4,7 @@ from numpy.ctypeslib import ndpointer
 from . import Globals
 
 	
-def FindHarmonics(T,s,Params,halpha=None,Harmonics=[1,2,3],x0=None,df=1.0,Method='Complex'):
+def FindHarmonics(T,s,Params,halpha=None,RhoBG=None,Harmonics=[1,2,3],x0=None,df=1.0,Method='Complex'):
 	'''
 	Finds harmonic frequencies of waves capable of standing on a given field line.
 	
@@ -37,6 +37,10 @@ def FindHarmonics(T,s,Params,halpha=None,Harmonics=[1,2,3],x0=None,df=1.0,Method
 		_halpha = halpha.astype('float32')
 	else:
 		_halpha = np.ones(np.size(s),dtype='float32')
+	if not RhoBG is None:
+		_RhoBG = RhoBG.astype('float32')
+	else:
+		_RhoBG = np.zeros(np.size(s),dtype='float32')
 	_n = T.nstep
 
 	_Params = np.float32(Params)
@@ -49,14 +53,19 @@ def FindHarmonics(T,s,Params,halpha=None,Harmonics=[1,2,3],x0=None,df=1.0,Method
 	if x0 is None:
 		if Method is 'Complex':
 			x0 = np.float32(1.0)
-			if np.size(x0) == 1:
-				_x0 = np.zeros(_nh,dtype='float32')+x0
-			else:
-				_x0 = np.array(x0,dtype='float32')
-			_nIter = np.zeros(_nh,dtype='int32')
 		else:
-			_x0 = np.float32(0.0)
-			_nIter = np.zeros(1,dtype='int32')
+			x0 = np.float32(0.0)
+	
+	if Method is 'Complex':
+		if np.size(x0) == 1:
+			_x0 = np.zeros(_nh,dtype='float32')+x0
+		else:
+			_x0 = np.array(x0,dtype='float32')
+		_nIter = np.zeros(_nh,dtype='int32')
+	else:
+		_x0 = np.float32(x0)
+		_nIter = np.zeros(1,dtype='int32')
+	
 	_df = np.float32(df)
 
 	
@@ -69,9 +78,9 @@ def FindHarmonics(T,s,Params,halpha=None,Harmonics=[1,2,3],x0=None,df=1.0,Method
 		_InPlanet = np.float32(T.R < 1.0)
 	
 	if Method is 'Complex':
-		Globals._CppFindHarmonicsComplex(_B,_R,_s,_halpha,_InPlanet,_n,_Params,_nP,_maxR,_HarmInds,_nh,_x0,_Success,_nIter,_freqs)
+		Globals._CppFindHarmonicsComplex(_B,_R,_s,_halpha,_InPlanet,_RhoBG,_n,_Params,_nP,_maxR,_HarmInds,_nh,_x0,_Success,_nIter,_freqs)
 	else:
-		Globals._CppFindHarmonics(_B,_R,_s,_halpha,_InPlanet,_n,_Params,_nP,_maxR,_df,_HarmInds,_nh,_x0,_nIter,_freqs)
+		Globals._CppFindHarmonics(_B,_R,_s,_halpha,_InPlanet,_RhoBG,_n,_Params,_nP,_maxR,_df,_HarmInds,_nh,_x0,_nIter,_freqs)
 					
 	
 	return _freqs,_Success,_nIter

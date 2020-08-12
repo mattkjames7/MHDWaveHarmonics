@@ -5,7 +5,7 @@ from numpy.ctypeslib import ndpointer
 
 
 
-def SolveWave(f,x,B,R=None,Va=None,halpha=None,Params=None,InPlanet=None,Method='Complex',Unscale=True):
+def SolveWave(f,x,B,R=None,Va=None,halpha=None,RhoBG=None,Params=None,InPlanet=None,Method='Complex',Unscale=True):
 	'''
 	Solves wave equation using the Runge-Kutta-Gill method
 	
@@ -53,7 +53,10 @@ def SolveWave(f,x,B,R=None,Va=None,halpha=None,Params=None,InPlanet=None,Method=
 		_InPlanet = np.zeros(np.size(x),dtype='float32')
 	else:
 		_InPlanet = np.float32(InPlanet)
-
+	if not RhoBG is None:
+		_RhoBG = RhoBG.astype('float32')
+	else:
+		_RhoBG = np.zeros(np.size(x),dtype='float32')
 	_n = np.int32(np.size(_x))
 	_yr = np.zeros(_n,dtype='float32')
 	_yi = np.zeros(_n,dtype='float32')
@@ -77,7 +80,7 @@ def SolveWave(f,x,B,R=None,Va=None,halpha=None,Params=None,InPlanet=None,Method=
 			print("Please supply an array for R")
 			return None
 		else:
-			Globals._CppSolveWave(_f,_B,_R,_x,_halpha,_InPlanet,_n,_Params,_nP,Rmax,_yr)
+			Globals._CppSolveWave(_f,_B,_R,_x,_halpha,_InPlanet,_RhoBG,_n,_Params,_nP,Rmax,_yr)
 			if Unscale:
 				return _yr
 			else:
@@ -87,7 +90,7 @@ def SolveWave(f,x,B,R=None,Va=None,halpha=None,Params=None,InPlanet=None,Method=
 			print("Please supply an array for R")
 			return None
 		else:
-			Globals._CppSolveWaveComplex(_f,_B,_R,_x,_halpha,_InPlanet,_n,_Params,_nP,Rmax,_yr,_yi,_phase,_mxr,_mxi)
+			Globals._CppSolveWaveComplex(_f,_B,_R,_x,_halpha,_InPlanet,_RhoBG,_n,_Params,_nP,Rmax,_yr,_yi,_phase,_mxr,_mxi)
 			if Unscale:
 				return _yr*_mxr[0],_yi*_mxi[0],_phase
 			else:

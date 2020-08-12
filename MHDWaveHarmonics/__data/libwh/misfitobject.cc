@@ -1,7 +1,7 @@
 #include "misfitobject.h"
 
 
-MisfitObject::MisfitObject(float *_B, float *_R, float *_s, float *_halpha, float *_InPlanet, int _n, int _ntrace, int *_nsteps, float *_maxR, float *_freqs, int *_harms, float _df) {
+MisfitObject::MisfitObject(float *_B, float *_R, float *_s, float *_halpha, float *_InPlanet, float *_RhoBG, int _n, int _ntrace, int *_nsteps, float *_maxR, float *_freqs, int *_harms, float _df) {
 	/*
 	 * The constructor of the MisfitObject, passes pointers to the original data tot he object.
 	 * 
@@ -33,6 +33,7 @@ MisfitObject::MisfitObject(float *_B, float *_R, float *_s, float *_halpha, floa
 	s = _s;
 	halpha = _halpha;
 	InPlanet = _InPlanet;
+	RhoBG = _RhoBG;
 	
 	maxR = _maxR;
 	nsteps = _nsteps;
@@ -66,9 +67,9 @@ float MisfitObject::GetMisfit(float *Params, int nP, bool Complex) {
 	p = 0;
 	for (i=0;i<ntrace;i++) {
 		if (Complex) {
-			FindHarmonicsComplex(&B[p],&R[p],&s[p],&halpha[p],&InPlanet[p],nsteps[i],Params,nP,maxR[i],&harms[i],1,f0c,Success,nIter,ftmp);
+			FindHarmonicsComplex(&B[p],&R[p],&s[p],&halpha[p],&InPlanet[p],&RhoBG[p],nsteps[i],Params,nP,maxR[i],&harms[i],1,f0c,Success,nIter,ftmp);
 		} else {
-			FindHarmonics(&B[p],&R[p],&s[p],&halpha[p],&InPlanet[p],nsteps[i],Params,nP,maxR[i],df,&harms[i],1,df,nIter,ftmp);
+			FindHarmonics(&B[p],&R[p],&s[p],&halpha[p],&InPlanet[p],&RhoBG[p],nsteps[i],Params,nP,maxR[i],df,&harms[i],1,df,nIter,ftmp);
 			//printf("%d %f %f %f\n",nIter[0],freqs[i],ftmp[0],df);
 		}
 		misfit += pow(freqs[i]-ftmp[0],2.0);

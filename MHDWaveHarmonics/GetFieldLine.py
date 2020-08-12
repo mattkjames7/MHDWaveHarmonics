@@ -309,9 +309,11 @@ def GetFieldLine(pos,Date=None,ut=None,Model='KT17',Delta=None,Polarization='non
 	#return T0,T1,s0,s1
 	d = np.zeros(T0.nstep,dtype='float32')
 	#print((s1,T1.x[0:s1.size]))
-	fx = InterpolatedUnivariateSpline(s1,T1.x[0:s1.size])
-	fy = InterpolatedUnivariateSpline(s1,T1.y[0:s1.size])
-	fz = InterpolatedUnivariateSpline(s1,T1.z[0:s1.size])
+	_,uinds = np.unique(s1,return_index=True)
+
+	fx = InterpolatedUnivariateSpline(s1[uinds],T1.x[uinds])
+	fy = InterpolatedUnivariateSpline(s1[uinds],T1.y[uinds])
+	fz = InterpolatedUnivariateSpline(s1[uinds],T1.z[uinds])
 
 	def PosFn(s):
 		return fx(s),fy(s),fz(s)

@@ -52,9 +52,9 @@ from . import Globals
 	# return CalculateMisfit
 	
 	
-def _GetMisfitFunctionInstance(T,s,halpha,freqs,harms,Params0,ParamFit,df=0.1,Method='Complex'):
-	_B,_R,_s,_halpha,_InPlanet,_n,_nTrace,_nsteps,_maxR,_freqs,_harms,_Complex,_df = _ConvertToCppInput(T,s,halpha,freqs,harms,df,Method)
-	instance = Globals._CppInitMisfitObject(_B,_R,_s,_halpha,_InPlanet,_n,_nTrace,_nsteps,_maxR,_freqs,_harms,_df)
+def _GetMisfitFunctionInstance(T,s,halpha,freqs,harms,Params0,ParamFit,df=0.1,Method='Complex',RhoBG=None):
+	_B,_R,_s,_halpha,_InPlanet,_RhoBG,_n,_nTrace,_nsteps,_maxR,_freqs,_harms,_Complex,_df = _ConvertToCppInput(T,s,halpha,RhoBG,freqs,harms,df,Method)
+	instance = Globals._CppInitMisfitObject(_B,_R,_s,_halpha,_InPlanet,_RhoBG,_n,_nTrace,_nsteps,_maxR,_freqs,_harms,_df)
 	_nP = np.int32(np.size(ParamFit))
 	_Params = np.zeros(_nP,dtype='float32')
 	use = np.where(ParamFit)[0]
@@ -79,7 +79,7 @@ def _GetMisfitFunctionInstance(T,s,halpha,freqs,harms,Params0,ParamFit,df=0.1,Me
 
 		
 
-def FitPlasma(T,s,halpha,freqs,harms,Params0,df=1.0,Method='Complex',ParamFit=None):
+def FitPlasma(T,s,halpha,freqs,harms,Params0,df=1.0,Method='Complex',ParamFit=None,RhoBG=None):
 	'''
 	This routine attempts to fit a plasma mass density and power law to a set of frequencies on a single or multiple field lines
 	
@@ -105,7 +105,7 @@ def FitPlasma(T,s,halpha,freqs,harms,Params0,df=1.0,Method='Complex',ParamFit=No
 		ParamFit = np.ones(np.size(Params0),dtype='bool')
 	X = np.array(Params0)[ParamFit]
 	
-	Inst,MF = _GetMisfitFunctionInstance(T,s,halpha,freqs,harms,Params0,ParamFit,df,Method)
+	Inst,MF = _GetMisfitFunctionInstance(T,s,halpha,freqs,harms,Params0,ParamFit,df,Method,RhoBG=RhoBG)
 	
 	res = minimize(MF,X,method='nelder-mead')
 	ParamOut = np.copy(Params0)
@@ -115,13 +115,15 @@ def FitPlasma(T,s,halpha,freqs,harms,Params0,df=1.0,Method='Complex',ParamFit=No
 	return ParamOut
 
 
-def _ConvertToCppInput(T,s,halpha,freqs,harms,df=0.1,Method='Complex'):
+def _ConvertToCppInput(T,s,halpha,RhoBG,freqs,harms,df=0.1,Method='Complex'):
 	if not isinstance(T,list):
 		T = [T]
 	if not isinstance(s,list):
 		s = [s]
-	if not isinstance(halpha,list):
+	if not halpha is None and not isinstance(halpha,list):
 		halpha = [halpha]
+	if not RhoBG is None and not isinstance(RhoBG,list):
+		RhoBG = [RhoBG]
 
 
 	nT = len(T)
@@ -137,6 +139,7 @@ def _ConvertToCppInput(T,s,halpha,freqs,harms,df=0.1,Method='Complex'):
 	_InPlanet = np.zeros((nT,nS),dtype='float32')+np.nan
 	_nsteps = np.zeros(nT,dtype='int32')
 	_halpha = np.ones((nT,nS),dtype='float32')
+	_RhoBG = np.zeros((nT,nS),dtype='float32')
 
 	for i in range(0,nT):
 		_nsteps[i] = np.size(s[i])
@@ -148,6 +151,8 @@ def _ConvertToCppInput(T,s,halpha,freqs,harms,df=0.1,Method='Complex'):
 		_s[i][:_nsteps[i]] = s[i][:_nsteps[i]].astype('float32')
 		if not halpha is None:
 			_halpha[i][:_nsteps[i]] = halpha[i][:_nsteps[i]]
+		if not RhoBG is None:
+			_RhoBG[i][:_nsteps[i]] = RhoBG[i][:_nsteps[i]]
 		if hasattr(T[i],'InPlanet'):
 			_InPlanet[i][:_nsteps[i]] = T[i].InPlanet[:_nsteps[i]]
 	
@@ -156,6 +161,7 @@ def _ConvertToCppInput(T,s,halpha,freqs,harms,df=0.1,Method='Complex'):
 	_maxR = _maxR.flatten()
 	_s = _s.flatten()
 	_halpha = _halpha.flatten()
+	_RhoBG = _RhoBG.flatten()
 	
 	_n = np.size(_R)
 
@@ -165,10 +171,10 @@ def _ConvertToCppInput(T,s,halpha,freqs,harms,df=0.1,Method='Complex'):
 	_harms = np.array(harms).astype('int32')
 	_Complex = np.bool8(Method is 'Complex')
 	
-	return _B,_R,_s,_halpha,_InPlanet,_n,_nTrace,_nsteps,_maxR,_freqs,_harms,_Complex,_df
+	return _B,_R,_s,_halpha,_InPlanet,_RhoBG,_n,_nTrace,_nsteps,_maxR,_freqs,_harms,_Complex,_df
 
 	
-def GetMistfitGrid(T,s,halpha,freqs,harms,ParamRange=[[-1.0,2.0],[-6.0,6.0]],dParam=[0.25,1.0],df=1.0,Method='Complex'):
+def GetMistfitGrid(T,s,halpha,freqs,harms,ParamRange=[[-1.0,2.0],[-6.0,6.0]],dParam=[0.25,1.0],df=1.0,Method='Complex',RhoBG=None):
 	'''
 	Calculates the misfit between modelled and supplied harmonic frequncies for a range 
 	of plasma mass densities and power law indices, each on different field traces.
@@ -274,10 +280,10 @@ def GetMistfitGrid(T,s,halpha,freqs,harms,ParamRange=[[-1.0,2.0],[-6.0,6.0]],dPa
 
 	#_Complex = np.bool8(Method is 'Complex')
 
-	_B,_R,_s,_halpha,_InPlanet,_n,_nTrace,_nsteps,_maxR,_freqs,_harms,_Complex,_df = _ConvertToCppInput(T,s,halpha,freqs,harms,df,Method)
+	_B,_R,_s,_halpha,_InPlanet,_RhoBG,_n,_nTrace,_nsteps,_maxR,_freqs,_harms,_Complex,_df = _ConvertToCppInput(T,s,halpha,RhoBG,freqs,harms,df,Method)
 
 
-	Globals._CppGridMisfit(_B,_R,_s,_halpha,_InPlanet,_n,_nTrace,_nsteps,_maxR,_freqs,_harms,_Par,_nP,_df,_Complex,_nG,_grid)
+	Globals._CppGridMisfit(_B,_R,_s,_halpha,_InPlanet,_RhoBG,_n,_nTrace,_nsteps,_maxR,_freqs,_harms,_Par,_nP,_df,_Complex,_nG,_grid)
 	grid = _grid.reshape(tuple(ParN[::-1]))
 	#convert Peq or neq to log scale again
 	ParC[0] = np.log10(ParC[0])
@@ -285,7 +291,7 @@ def GetMistfitGrid(T,s,halpha,freqs,harms,ParamRange=[[-1.0,2.0],[-6.0,6.0]],dPa
 	return ParAx,ParC,ParN,grid
 	
 	
-def PlotGridMisfit(T,s,halpha,freqs,harms,ParamRange=[[-1.0,2.0],[-6.0,6.0]],dParam=[0.25,1.0],PlotAx=[0,1],AxInds=None,df=1.0,Method='Complex',fig=None,maps=[1,1,0,0],scale=None,nobar=False):
+def PlotGridMisfit(T,s,halpha,freqs,harms,ParamRange=[[-1.0,2.0],[-6.0,6.0]],dParam=[0.25,1.0],PlotAx=[0,1],AxInds=None,df=1.0,Method='Complex',fig=None,maps=[1,1,0,0],scale=None,nobar=False,RhoBG=None):
 	'''
 	Plots misfit grid created by GetMisfitGrid routine.
 	
@@ -308,7 +314,7 @@ def PlotGridMisfit(T,s,halpha,freqs,harms,ParamRange=[[-1.0,2.0],[-6.0,6.0]],dPa
 			
 	
 	'''
-	ParAx,ParC,ParN,grid =GetMistfitGrid(T,s,halpha,freqs,harms,ParamRange,dParam,df,Method)
+	ParAx,ParC,ParN,grid = GetMistfitGrid(T,s,halpha,freqs,harms,ParamRange,dParam,df,Method,RhoBG=RhoBG)
 	
 	Xax = ParAx[PlotAx[0]]
 	Yax = ParAx[PlotAx[1]]
@@ -358,7 +364,7 @@ def PlotGridMisfit(T,s,halpha,freqs,harms,ParamRange=[[-1.0,2.0],[-6.0,6.0]],dPa
 
 	xmsh,ymsh=np.meshgrid(Xax,Yax)
 	grid=np.transpose(np.array(grid))
-	grid=ma.masked_where(np.isnan(grid),grid)
+	grid=np.ma.masked_where(np.isnan(grid),grid)
 	fig.pcolormesh(xmsh,ymsh,grid,cmap=cmap,vmin=scale[0],vmax=scale[1])
 	
 	ztitle = 'Error log$_{10}(\Delta f_{RMS})$ (mHz)' 
