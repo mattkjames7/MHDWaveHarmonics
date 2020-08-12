@@ -226,11 +226,17 @@ def GetFieldLine(pos,Date=None,ut=None,Model='KT17',Delta=None,Polarization='non
 	kArgs = Globals.DefArgs[Model]
 	keys = list(kArgs.keys())
 	kwkeys = list(kwargs.keys())
-	
+
+
 	#update model arguments
+	OtherKeys = ['parmod','iopt','Vx','Vy','Vz','Kp','Pdyn','SymH','By','Bz']
 	for k in keys:
 		if k in kwkeys:
 			kArgs[k] = kwargs[k]
+	for k in OtherKeys:
+		if k in kwkeys:
+			kArgs[k] = kwargs[k]
+			
 	kArgs['Model'] = Model
 
 	#get Delta and Rp
