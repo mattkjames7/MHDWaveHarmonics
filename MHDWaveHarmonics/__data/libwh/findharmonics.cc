@@ -101,7 +101,10 @@ void FindHarmonics(float *B, float *R, float *s, float *halpha, float *InPlanet,
 				freqs[h] = NAN;
 				break;
 			}			
-				
+			if (i == nmax-1) {
+				//if we have reached nmax, then all of the frequencies output after this are likely to be wrong
+				return;
+			}	
 		}
 		f0 += farr[nmax-2];
 
