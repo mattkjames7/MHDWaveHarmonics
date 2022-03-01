@@ -68,7 +68,7 @@ def GetModelFunction(**kwargs):
 			return T0
 	elif Model == 'Dipole':
 		def ModelFunc(*args):
-			T0 = TraceField(*args,**kwargs)
+			T0 = TraceField(*args[:3],**kwargs)
 			return T0
 	else:
 		print('Model not found')
@@ -264,6 +264,13 @@ def GetFieldLine(pos,Date=None,ut=None,Model='KT17',Delta=None,Polarization='non
 	
 	#get the first field line
 	T0 = ModelFunc(*args)
+	if not hasattr(T0,'x'):
+		T0.x = T0.xsm
+		T0.y = T0.ysm
+		T0.z = T0.zsm
+		T0.Bx = T0.Bxsm
+		T0.By = T0.Bysm
+		T0.Bz = T0.Bzsm
 	_SortModelDirection(T0)
 
 	#return T0
@@ -271,7 +278,7 @@ def GetFieldLine(pos,Date=None,ut=None,Model='KT17',Delta=None,Polarization='non
 	for i in range(1,T0.nstep):
 		s0[i] = s0[i-1] + np.sqrt((T0.x[i]-T0.x[i-1])**2+(T0.y[i]-T0.y[i-1])**2+(T0.z[i]-T0.z[i-1])**2)*Rp
 
-
+	print(Polarization)
 	if Polarization == 'none' or Polarization is None:
 		return (T0,s0)
 	elif Polarization == 'poloidal':
@@ -291,6 +298,7 @@ def GetFieldLine(pos,Date=None,ut=None,Model='KT17',Delta=None,Polarization='non
 		#calculate dt and dp
 		dt = Delta*np.sin(alpha)
 		dp = Delta*np.cos(alpha)
+		print(dt,dp)
 		#get beta
 		beta = mlt - np.pi
 		#now rotate
@@ -304,10 +312,17 @@ def GetFieldLine(pos,Date=None,ut=None,Model='KT17',Delta=None,Polarization='non
 		args1 = (eqpos1[0],eqpos1[1],eqpos1[2],Date,ut)
 	else:
 		args1 = (eqpos1[0],eqpos1[1],eqpos1[2])
-
 		
 	T1 = ModelFunc(*args1)
+	if not hasattr(T1,'x'):
+		T1.x = T1.xsm
+		T1.y = T1.ysm
+		T1.z = T1.zsm
+		T1.Bx = T1.Bxsm
+		T1.By = T1.Bysm
+		T1.Bz = T1.Bzsm
 	_SortModelDirection(T1)
+
 	s1 = np.zeros(T1.nstep)
 	for i in range(1,T1.nstep):
 		s1[i] = s1[i-1] + np.sqrt((T1.x[i]-T1.x[i-1])**2+(T1.y[i]-T1.y[i-1])**2+(T1.z[i]-T1.z[i-1])**2)*Rp
@@ -329,9 +344,11 @@ def GetFieldLine(pos,Date=None,ut=None,Model='KT17',Delta=None,Polarization='non
 		
 	for i in range(0,T0.nstep):
 		res = minimize(DistFn,s0[i],args=(i),method='Nelder-Mead')
+		print(res.nit)
 		d[i] = DistFn(res.x,i)*Rp
 		
 	h_alpha = d/(Delta*Rp)
+	print(h_alpha)
 	
 	return (T0,s0,h_alpha)
 	

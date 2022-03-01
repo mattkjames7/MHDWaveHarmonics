@@ -86,6 +86,21 @@ _CppCalcFieldLineVaMid.argtypes = [ndpointer(ctypes.c_float, flags="C_CONTIGUOUS
 							ctypes.c_int,
 							ctypes.c_float,
 							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS")]
+							
+_CppCalcFieldLineVaPMD = libwh.CalcFieldLineVaPMD
+_CppCalcFieldLineVaPMD.argtypes = [ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+							ctypes.c_int,
+							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS")]
+							
+_CppCalcFieldLineVaMidPMD = libwh.CalcFieldLineVaMidPMD
+_CppCalcFieldLineVaMidPMD.argtypes = [ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+							ctypes.c_int,
+							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS")]
 
 _CppCalcdlndx = libwh.Calcdlndx
 _CppCalcdlndx.argtypes = [ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
@@ -176,6 +191,35 @@ _CppFindHarmonicsComplex.argtypes = [ndpointer(ctypes.c_float, flags="C_CONTIGUO
 							ndpointer(ctypes.c_int, flags="C_CONTIGUOUS"),
 							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS")]	
 
+_CppFindHarmonicsPMD = libwh.FindHarmonicsPMD
+_CppFindHarmonicsPMD.argtypes = [ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+							ctypes.c_int,
+							ctypes.c_float,
+							ndpointer(ctypes.c_int, flags="C_CONTIGUOUS"),
+							ctypes.c_int,
+							ctypes.c_float,
+							ndpointer(ctypes.c_int, flags="C_CONTIGUOUS"),
+							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS")]	
+
+_CppFindHarmonicsPMDComplex = libwh.FindHarmonicsPMDComplex
+_CppFindHarmonicsPMDComplex.argtypes = [ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+							ctypes.c_int,
+							ndpointer(ctypes.c_int, flags="C_CONTIGUOUS"),
+							ctypes.c_int,		
+							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),
+							ndpointer(ctypes.c_bool, flags="C_CONTIGUOUS"),
+							ndpointer(ctypes.c_int, flags="C_CONTIGUOUS"),
+							ndpointer(ctypes.c_float, flags="C_CONTIGUOUS")]	
 
 
 _CppGridMisfit = libwh.GridMisfitWrapper

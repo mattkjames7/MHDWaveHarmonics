@@ -95,6 +95,7 @@ void CalcFieldLineVa(float *B, float *R,  float *s, float *halpha, float *InPlan
 				ne = Params[2]*exp(-0.5*pow((Rnorm-1.0)/0.1,2.0)) + Params[0]*pow(Rnorm,-Params[1]);
 				ne *= 1e6; //convert to m-3
 				Va[i] = ((B[i]*1.0e-9)/sqrt(mu0*(ne*mav + RhoBG[i]*1e6*amu)))/1000.0;	
+
 			} else {
 				HasTransition = true;
 			}		
@@ -149,7 +150,6 @@ void CalcFieldLineVa(float *B, float *R,  float *s, float *halpha, float *InPlan
 			} else {
 				v0 = Va[Ji0[i]-1];
 			}
-			printf("j0 %d j1 %d\n",Ji0[i],Ji1[i]);
 			for (j=Ji0[i];j<=Ji1[i];j++) {
 				Va[j] = v0 + dv*InPlanet[j];
 			}
@@ -159,6 +159,46 @@ void CalcFieldLineVa(float *B, float *R,  float *s, float *halpha, float *InPlan
 	}
 }
 
+
+void CalcFieldLineVaPMD(float *B, float *pmd, float *RhoBG, int n, float *Va) {
+	/*
+	 *	This Function will calculate the Alfven speed along the field line. 
+	 * 
+	 * Inputs:
+	 * 		B: array containing the magnetic field magnitude along the field line in nT
+	 * 		R: radial distance of every point along the field line in Rp
+	 * 		s: distance in km aloong the field line
+	 * 		halpha: See Singer et al 1981 - based on separation of two field lines
+	 * 		InPlanet: a floating point arrray containing 1.0 when the field line
+	 * 			is within the surface of the planet, or 0.0 outside, values between 0.0
+	 * 			and 1.0 may be used to smooth the transition.
+	 *		n: length of the above arrays.
+	 * 		Params: input parameter array - for the simple power law model, this array contains
+	 * 			2 parameters: [p_eq,power]
+	 * 			where mass density is given by: rho = p_eq*(Rmax/R)**power
+	 * 			if provided with a 5 element array containing [n0,alpha,a,beta,mav0], 
+	 * 			then a variant of the Sandhu model is used:
+	 * 			where n0, alpha and a are used to calculate number density along the field line
+	 * 			R/Rmax <= 0.8 : n = n0*(R/Rmax)**-alpha
+	 * 			R/Rmax  > 0.8 : n = a*exp(-0.5*(((R/Rmax)-1.0)/0.1)**2) + n0
+	 * 			(this is simplified to form a single equation to make the function continuuous) 
+	 * 			and beta and mav0 are used to define the power law of the average mass density 
+	 * 			along the field line: mav = mav0*(R/Rmax)**-beta
+	 * 		nP: Integer number of parameters given in Params
+	 * 		maxR: Maximum radial distance along the field line (Rp).
+	 * 		RhoBG: background plasma profile
+	 * 
+	 * Output:
+	 * 		Va: Alfven speed along the field line in km/s
+	 */
+	
+	int i;
+	for (i=0;i<n;i++) {
+		Va[i] = ((B[i]*1.0e-9)/sqrt(mu0*(pmd[i] + RhoBG[i])*1e6*amu))/1000.0;
+	}
+
+	
+}
 
 
 void CalcFieldLineVaMid(float *B, float *R,  float *s, float *halpha, float *InPlanet, float *RhoBG, int n, float *Params, int nP, float maxR, float *Vamid) {
@@ -197,6 +237,52 @@ void CalcFieldLineVaMid(float *B, float *R,  float *s, float *halpha, float *InP
 	int i;
 	
 	CalcFieldLineVa(B,R,s,halpha,InPlanet,RhoBG,n,Params,nP,maxR,Va);
+	
+	/* create Linterp object*/
+	Linterp VaInt(s,Va,n);
+
+	for (i=0;i<n-1;i++) {	
+		//Vamid[i] = VaSpline.Interp(0.5*(s[i]+s[i+1]));
+		Vamid[i] = VaInt.Interp(0.5*(s[i]+s[i+1]));
+	}
+}
+
+void CalcFieldLineVaMidPMD(float *B, float *pmd, float *s, float *RhoBG, 
+							int n, float *Vamid) {
+	/*
+	 *	This Function will calculate the Alfven speed along the field line at 
+	 * 	the midpoints between field line steps. 
+	 * 
+	 * Inputs:
+	 * 		B: array containing the magnetic field magnitude along the field line in nT
+	 * 		R: radial distance of every point along the field line in Rp
+	 * 		s: distance in km aloong the field line
+	 * 		halpha: See Singer et al 1981 - based on separation of two field lines
+	 * 		InPlanet: a floating point arrray containing 1.0 when the field line
+	 * 			is within the surface of the planet, or 0.0 outside, values between 0.0
+	 * 			and 1.0 may be used to smooth the transition.
+	 *		n: length of the above arrays.
+	 * 		Params: input parameter array - for the simple power law model, this array contains
+	 * 			2 parameters: [p_eq,power]
+	 * 			where mass density is given by: rho = p_eq*(Rmax/R)**power
+	 * 			if provided with a 5 element array containing [n0,alpha,a,beta,mav0], 
+	 * 			then a variant of the Sandhu model is used:
+	 * 			where n0, alpha and a are used to calculate number density along the field line
+	 * 			R/Rmax <= 0.8 : n = n0*(R/Rmax)**-alpha
+	 * 			R/Rmax  > 0.8 : n = a*exp(-0.5*(((R/Rmax)-1.0)/0.1)**2) + n0
+	 * 			(this is simplified to form a single equation to make the function continuuous) 
+	 * 			and beta and mav0 are used to define the power law of the average mass density 
+	 * 			along the field line: mav = mav0*(R/Rmax)**-beta
+	 * 		nP: Integer number of parameters given in Params
+	 * 		maxR: Maximum radial distance along the field line (Rp).
+	 * 
+	 * Output:
+	 * 		Vamid: Alfven speed along the field line in km/s
+	 */
+	float Va[n];
+	int i;
+	
+	CalcFieldLineVaPMD(B,pmd,RhoBG,n,Va);
 	
 	/* create Linterp object*/
 	Linterp VaInt(s,Va,n);
@@ -281,7 +367,7 @@ void SolveWaveWrapper(float f, float *B, float *R,  float *s, float *halpha, flo
 	
 	/* work out dlndx array */
 	Calcdlndx(B,s,halpha,InPlanet,n,dlndx);
-	
+
 	/*solve wave*/
 	SolveWave(f,s,n,Va,dlndx,y);
 }
@@ -333,7 +419,8 @@ void SolveWaveComplexWrapper(float f, float *B, float *R,  float *s, float *halp
 	
 	/* work out dlndx array */
 	Calcdlndx(B,s,halpha,InPlanet,n,dlndx);
-	
+
+
 	/*solve wave*/
 	SolveWaveComplex(f,s,n,Va,dlndx,yr,yi,phase,mxr,mxi);
 	
@@ -367,10 +454,10 @@ void SolveWaveWrapperVa(float f, float *B, float *Va,  float *s, float *halpha, 
 	for (i=0;i<n-1;i++) {	
 		Vamid[i] = VaInt.Interp(0.5*(s[i]+s[i+1]));
 	}
-	
+
 	/* work out dlndx array */
 	Calcdlndx(B,s,halpha,InPlanet,n,dlndx);
-	
+
 	/*solve wave*/
 	SolveWave(f,s,n,Vamid,dlndx,y);
 }

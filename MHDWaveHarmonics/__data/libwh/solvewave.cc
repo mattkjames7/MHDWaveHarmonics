@@ -85,7 +85,7 @@ void SolveWaveComplex(float f, float *x, int n, float *Va, float *dlndx, float *
 	for (i=0;i<n;i++) {
 		yr[i] /= mxr[0];
 		yi[i] /= mxi[0];
-		phase[i] = atan2(yr[i],yi[i])*180.0/M_PI + np*360.0;
+		phase[i] = atan2(yr[i],yi[i])*180.0/M_PI + np*360.0; //yr and yi might be the wrong way around - check this!
 		if (i > 0) {
 			if (phase[i] < phase[i-1] - 5) { //(what the) FUDGE!!!!!!!!!!!!!!!!
 				phase[i] += 360.0;

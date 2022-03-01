@@ -90,3 +90,63 @@ def CalcFieldLineVaMid(T,s,Params,halpha=None,RhoBG=None):
 	
 	return Va
 
+	
+def CalcFieldLineVaMidPMD(B,pmd,s,RhoBG=None):
+	'''
+	Calculated the Alfven speed along a field line.
+	
+	Input:
+		T: TraceField object.
+		s: Distance along the field line in km.
+		Params: For power law: 2-element array/list [p_eq,power].
+				For Sandhu model: 5-element array/list [n0,alpha,a,beta,mav0] (see GetSandhuParams).
+		halpha: halpha value based on the separation of two traces - if not supplied then is filled with ones (simple wave equation).
+	
+	Returns:
+		Array containing Alfven speed at the midpoints of s.
+	'''	
+	
+	n = np.size(s)
+	if not RhoBG is None:
+		RhoBG = RhoBG.astype('float32')
+	else:
+		RhoBG = np.zeros(n,dtype='float32')
+		
+	_B = np.array(B).astype('float32')
+	_pmd = np.array(pmd).astype('float32')
+	_s = np.array(s).astype('float32')
+
+	Va = np.zeros(n-1,dtype='float32')
+	Globals._CppCalcFieldLineVaMidPMD(_B,_pmd,_s,RhoBG,n,Va)
+	
+	return Va
+	
+def CalcFieldLineVaPMD(B,pmd,RhoBG=None):
+	'''
+	Calculated the Alfven speed along a field line.
+	
+	Input:
+		T: TraceField object.
+		s: Distance along the field line in km.
+		Params: For power law: 2-element array/list [p_eq,power].
+				For Sandhu model: 5-element array/list [n0,alpha,a,beta,mav0] (see GetSandhuParams).
+		halpha: halpha value based on the separation of two traces - if not supplied then is filled with ones (simple wave equation).
+	
+	Returns:
+		Array containing Alfven speed at the midpoints of s.
+	'''	
+	
+	n = np.size(B)
+	if not RhoBG is None:
+		RhoBG = RhoBG.astype('float32')
+	else:
+		RhoBG = np.zeros(n,dtype='float32')
+		
+	_B = np.array(B).astype('float32')
+	_pmd = np.array(pmd).astype('float32')
+
+	Va = np.zeros(n-1,dtype='float32')
+	Globals._CppCalcFieldLineVaPMD(_B,_pmd,RhoBG,n,Va)
+	
+	return Va
+

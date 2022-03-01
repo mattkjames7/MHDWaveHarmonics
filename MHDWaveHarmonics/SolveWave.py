@@ -63,33 +63,36 @@ def SolveWave(f,x,B,R=None,Va=None,halpha=None,RhoBG=None,Params=None,InPlanet=N
 	_phase = np.zeros(_n,dtype='float32')
 	_mxr = np.array([0.0],dtype='float32')
 	_mxi = np.array([0.0],dtype='float32')
-
+	print(_halpha)
 	if Params is None:
 		#use predefined Alfven speed array
 		if Va is None:
 			print("Please either supply an array of Va, or a set of Params")
 			return None
 		else:
+			print('Solve Va')
 			Globals._CppSolveWaveVa(_f,_B,_Va,_x,_halpha,_InPlanet,_n,_yr)
 			if Unscale:
 				return _yr
 			else:
 				return _yr/np.nanmax(np.abs(_yr))
-	elif Method is 'Simple':
+	elif Method == 'Simple':
 		if R is None:
 			print("Please supply an array for R")
 			return None
 		else:
+			print('Solve')
 			Globals._CppSolveWave(_f,_B,_R,_x,_halpha,_InPlanet,_RhoBG,_n,_Params,_nP,Rmax,_yr)
 			if Unscale:
 				return _yr
 			else:
 				return _yr/np.nanmax(np.abs(_yr))
-	elif Method is 'Complex':
+	elif Method == 'Complex':
 		if R is None:
 			print("Please supply an array for R")
 			return None
 		else:
+			print('Solve Complex')
 			Globals._CppSolveWaveComplex(_f,_B,_R,_x,_halpha,_InPlanet,_RhoBG,_n,_Params,_nP,Rmax,_yr,_yi,_phase,_mxr,_mxi)
 			if Unscale:
 				return _yr*_mxr[0],_yi*_mxi[0],_phase

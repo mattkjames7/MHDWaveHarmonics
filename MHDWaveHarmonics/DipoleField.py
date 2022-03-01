@@ -1,7 +1,7 @@
 import numpy as np
 from FieldTracing import RK4 as rk4
 from scipy.interpolate import InterpolatedUnivariateSpline
-
+import inspect
 	
 def GetDipoleModel(Beq):
 	'''
@@ -78,12 +78,13 @@ class TraceField(object):
 		n = np.where(self.z > 0)[0]
 		s = np.where(self.z < 0)[0]
 		
-
+		self.R = np.sqrt(self.x**2 + self.y**2 + self.z**2)
 		
 		if n.size > 1  and s.size > 1:
-			x = np.append(self.x[s[:-2]],self.x[n[:2]])
-			y = np.append(self.y[s[:-2]],self.y[n[:2]])
-			z = np.append(self.z[s[:-2]],self.z[n[:2]])
+			x = np.append(self.x[s[-2:]],self.x[n[:2]])
+			y = np.append(self.y[s[-2:]],self.y[n[:2]])
+			z = np.append(self.z[s[-2:]],self.z[n[:2]])
+
 			fzx = InterpolatedUnivariateSpline(z,x)
 			fzy = InterpolatedUnivariateSpline(z,y)
 			e = np.array([fzx(0.0),fzy(0.0),0.0])

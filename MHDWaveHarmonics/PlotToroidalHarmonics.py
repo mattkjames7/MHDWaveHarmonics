@@ -1,19 +1,28 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from .GetFieldLine import GetFieldLine
+from .FindHarmonics import FindHarmonics
+from .SolveWave import SolveWave
+from scipy.interpolate import InterpolatedUnivariateSpline,interp1d
 
-def PlotFieldLineDensity(pos,Params,fig=None,maps=[1,1,0,0],Overplot=False,**kwargs):
+def PlotToroidalHarmonics(pos,Params,nh=3,df=1.0,Rp=1.0,Colours=None,
+					Method='Complex',RhoBG=None,ReturnData=False,
+					fig=None,maps=[1,1,0,0],**kwargs):
 	'''
-	Simple routine to plot the modelled plasma mass density along a field line.
+	Plots structure of toroidal and poloidal harmonics of a given field line and plasma model.
 	
-	Args
-	=====
-		pos: 3 element ndarray containing the cartesian position to trace from in Rp.
+	Inputs
+	======
+		pos: This is the initial starting positional vector p = np.array([x,y,z]).
 		Params: For power law: 2-element array/list [p_eq,power].
 				For Sandhu model: 5-element array/list [n0,alpha,a,beta,mav0] (see GetSandhuParams).
-		fig: Pyplot instance, useful if plotting as a subplot on a pre-existing figure, by default will create new figure.
-		maps: 4 element list containing subplot information [xmaps,ymaps,xmap,ymap] where xmaps and ymaps represent the number of subplots in the x and y directions and xmap and ymap are the specific x and y indices to plot to.
-		Overplot: When set to True, this will inhibit the creation of a new subplot, fig must be supplied with a pre-existing figure, where the routine will plot over.
+
+		df: Frequency step size in mHz (default=1.0), smaller values should be used when expecting very low frequencies (not used when Complex method is being use).
+		nh: Number of harmonics to search for.
+		Rp: Planetary radius (can also be set to 'Mercury' of 'Earth')
+		Colours: array of colours used for plotting the harmonics.
+		Method: Set to 'Complex' or 'Simple' to use either complex or simple shooting method.
+		
 
 	Keyword Args
 	============
@@ -109,49 +118,130 @@ def PlotFieldLineDensity(pos,Params,fig=None,maps=[1,1,0,0],Overplot=False,**kwa
 						Beq: Megnatic field strength at equator in nT (Default=-31200.0).
 		Delta: Separation between two traced field lines
 		Polarization: 'none'|'toroidal'|'poloidal'
-		Core: This only applies to the KT14/KT17 field, as it will include tracing to the core of the planet rather than the surface.	
-
-		
-	Returns
-	========
-		pyplot instance
-	
+		Core: This only applies to the KT14/KT17 field, as it will include tracing to the core of the planet rather than the surface.		
+	 
 	'''
-	tmp = GetFieldLine(pos,**kwargs)
-	Polarization = kwargs.get('Polarization','none')
-	if Polarization == 'none':
-		T,s = tmp
+
+
+	Tt,St,ht= GetFieldLine(pos,Polarization='toroidal',**kwargs)
+	Core = kwargs.get('Core',True)
+
+	#find crossing over z = 0
+	n = np.where(Tt.z >= 0.0)[0]
+	s = np.where(Tt.z < 0.0)[0]
+	use = np.append(s[:-2],n[:2])
+	if use.size == 4:
+		f = InterpolatedUnivariateSpline(Tt.z[use],St[use])
 	else:
-		T,s,h = tmp
-		
+		f = interp1d(Tt.z[use],St[use])
+	Smid = f(0.0)
 	
-	Bm = np.sqrt(T.Bx**2.0 + T.By**2.0 + T.Bz**2.0).astype('float32')
-	R = np.sqrt(T.x**2.0 + T.y**2.0 + T.z**2.0)
-	maxR = np.float32(R.max())
+	
+	
+
+	B = np.sqrt(Tt.Bx**2 + Tt.By**2 + Tt.Bz**2)
+	B = B[np.isfinite(B)]
+	R = np.sqrt(Tt.x**2.0 + Tt.y**2.0 + Tt.z**2.0)[:Tt.nstep]
+
+	mu0 = 4*np.pi*1e-7
+
+	if hasattr(Tt,'Rmso'):
+		Rgeo = Tt.Rmso
+		Rmag = Tt.Rmsm
+	else:
+		Rgeo = np.sqrt(Tt.x**2.0 + Tt.y**2.0 + Tt.z**2.0)
+		Rmag = np.sqrt(Tt.x**2.0 + Tt.y**2.0 + Tt.z**2.0)
+	
+	if hasattr(Tt,'InPlanet'):
+		InPlanet=Tt.InPlanet
+	else:
+		InPlanet = (Rgeo < 1.0)
+
+	if Rp == 'Mercury':
+		Rp = 2440.0
+		xlabel = '$x$ ($R_M$)'
+	elif Rp == 'Earth':
+		Rp = 6380.0
+		xlabel = '$x$ ($R_E$)'
+	elif Rp == 1.0:
+		xlabel = '$x$ (km)'
+	else:
+		xlabel = '$x$ ($R_P$)'	
 	
 	if np.size(Params) == 2:
-		p = Params[0]*(maxR/R)**Params[1]
-		label='$\\rho_{eq} = $'+'{:5.1f}'.format(Params[0])+', $m = $'+'{:3.1f}'.format(Params[1])
+		p = Params[0]*(R.max()/R)**Params[1]
+		title = '$\\alpha=$'+'{:3.1f}'.format(Params[1])+'$, \\rho_{eq}=$'+'{:5.1f}'.format(Params[0])+' amu cm$^{-3}$'
 	else:
-		Rnorm = R/maxR
+		Rnorm = R/R.max()
 		ne = Params[2]*np.exp(-0.5*((Rnorm-1.0)/0.1)**2) + Params[0]*Rnorm**(-Params[1])
+
 		mav = Params[4]*Rnorm**(-Params[3])
 		p = ne*mav
-		label='$\\rho_{eq} = $'+'{:5.1f}'.format(Params[0]*Params[4])
+		title = '$\\rho_{eq} = $'+'{:5.1f}'.format(Params[0]*Params[4])+' amu cm$^{-3}$'
+
 	
+	p = p*1.67377e-27*1e6
+	Va = (B*1e-9/np.sqrt(mu0*p))/1000.0
+	h2Bt = ht**2 * B
+
+	ft,_,_ = FindHarmonics(Tt,St,Params,ht,RhoBG,np.arange(nh)+1,None,df,Method)
+
 	if fig is None:
 		fig = plt
 		fig.figure()
 	if hasattr(fig,'Axes'):	
 		ax = fig.subplot2grid((maps[1],maps[0]),(maps[3],maps[2]))
 	else:
-		print('here')
 		ax = fig
 
-			
-	ax.plot(s,p,label=label)
-	ax.legend()
-	ax.set_ylabel('$\\rho$ (amu cm$^{-3}$)')
-	ax.set_xlabel('$x$ (km)')
-	return ax
 	
+	for i in range(0,nh):
+		y,_,_= SolveWave(ft[i],St,B,Rmag,None,ht,RhoBG,Params,InPlanet)
+
+		y/=ht
+		if i == 0:
+			ax.axis([0.0,np.max(St/Rp),-np.max(np.abs(y)),np.max(np.abs(y))])
+			ax.plot([0.0,np.max(St/Rp)],[0.0,0.0],color=[0.0,0.0,0.0],linestyle='--')
+		if Colours is None:
+			ax.plot(St/Rp,y,label='f={:5.2f} mHz'.format(ft[i]))
+		else:	
+			ax.plot(St/Rp,y,label='f={:5.2f} mHz'.format(ft[i]),color=Colours[i])
+	R = ax.axis()
+	ax.vlines(Smid,R[2],R[3],color=[0.0,0.0,0.0],linestyle=':')
+	ax.text(0.2*(R[1]-R[0])+R[0],0.75*(R[3]-R[2])+R[2],'South',ha='center',va='center',color=[0.7,0.7,0.7],zorder=-2.0,fontsize='x-large')
+	ax.text(0.8*(R[1]-R[0])+R[0],0.75*(R[3]-R[2])+R[2],'North',ha='center',va='center',color=[0.7,0.7,0.7],zorder=-2.0,fontsize='x-large')
+	ax.text(Smid,0.5*(R[3]-R[2])+R[2],'Magnetic Equator',va='center',color=[0.0,0.0,0.0],zorder=2.0,fontsize='medium',rotation=-90.0)
+	ax.legend(loc='lower right',fontsize=10)
+	ax.set_title(r'Toroidal Resonance '+title)
+	ax.set_xlabel(xlabel)
+	ax.set_ylabel(r'$\xi$ (Arb. Units)')
+	
+	
+	lbl = ax.get_yticklabels()
+	ax.set_yticklabels(['']*np.size(lbl))	
+	R = ax.axis()
+	
+
+	
+	if Core:
+
+		crust0 = np.where((Rgeo[:-1] < 1.0) & (Rgeo[1:] >= 1.0))[0][0]
+		crust1 = np.where((Rgeo[:-1] >= 1.0) & (Rgeo[1:] < 1.0))[0][0]
+		S0 = St[crust0]
+		S1 = St[crust1]
+		R = ax.axis()
+
+		ax.vlines(S0,R[2],R[3],color=[0.0,0.0,0.0],linestyle='--')
+		ax.vlines(S1,R[2],R[3],color=[0.0,0.0,0.0],linestyle='--')
+		ax.text(S0,0.5*(R[3]-R[2])+R[2],'Mercury Surface',va='center',ha='right',color=[0.0,0.0,0.0],zorder=2.0,fontsize='medium',rotation=-90.0)
+		ax.text(S1,0.5*(R[3]-R[2])+R[2],'Mercury Surface',va='center',color=[0.0,0.0,0.0],zorder=2.0,fontsize='medium',rotation=90.0)
+
+	
+	
+	if ReturnData:
+		return ax,Tt,St,ht	
+	else:
+		return ax
+	
+
+

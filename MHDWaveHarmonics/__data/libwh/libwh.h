@@ -30,7 +30,10 @@ extern "C" {
 	void SetRefractiveIndex(float NewRefIndex);
 	float GetRefractiveIndex();
 	void CalcFieldLineVa(float *B, float *R,  float *s, float *halpha, float *InPlanet, float *RhoBG, int n, float *Params, int nP, float maxR, float *Va);
+	void CalcFieldLineVaPMD(float *B, float *pmd, float *RhoBG, int n, float *Va) ;
 	void CalcFieldLineVaMid(float *B, float *R,  float *s, float *halpha, float *InPlanet, float *RhoBG, int n, float *Params, int nP, float maxR, float *Vamid);
+	void CalcFieldLineVaMidPMD(float *B, float *pmd, float *s, float *RhoBG, 
+							int n, float *Vamid);
 	void Calcdlndx(float *B, float *s, float *halpha, float *InPlanet, int n, float *dlndx);
 	int NextInstance();
 	int MaxInstance();
