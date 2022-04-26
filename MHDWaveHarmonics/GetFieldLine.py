@@ -34,6 +34,8 @@ else:
 def _SortModelDirection(T):
 	if T.nstep == 0:
 		return
+	
+		
 	if T.z[0] > T.z[T.nstep-1]:
 		I = np.arange(T.nstep)
 		O = I[::-1]
@@ -74,6 +76,17 @@ def GetModelFunction(**kwargs):
 		print('Model not found')
 		return None
 	return ModelFunc
+	
+def _FlattenTrace(T):
+	T.nstep = T.nstep[0]
+	T.x = T.x[0]
+	T.y = T.y[0]
+	T.z = T.z[0]
+	T.Bx = T.Bx[0]
+	T.By = T.By[0]
+	T.Bz = T.Bz[0]
+	T.Lshell = T.Lshell[0]
+	T.MltE = T.MltE[0]
 
 def GetFieldLine(pos,Date=None,ut=None,Model='KT17',Delta=None,Polarization='none',**kwargs):
 	'''
@@ -267,10 +280,14 @@ def GetFieldLine(pos,Date=None,ut=None,Model='KT17',Delta=None,Polarization='non
 	if not hasattr(T0,'x'):
 		T0.x = T0.xsm
 		T0.y = T0.ysm
-		T0.z = T0.zsm
+		T0.z = T0.zsm1
 		T0.Bx = T0.Bxsm
 		T0.By = T0.Bysm
 		T0.Bz = T0.Bzsm
+	if not hasattr(T0,'MltE'):
+		T0.MltE = T0.MLTe
+	if hasattr(T0.nstep,'shape'):
+		_FlattenTrace(T0)
 	_SortModelDirection(T0)
 
 	#return T0
@@ -321,6 +338,10 @@ def GetFieldLine(pos,Date=None,ut=None,Model='KT17',Delta=None,Polarization='non
 		T1.Bx = T1.Bxsm
 		T1.By = T1.Bysm
 		T1.Bz = T1.Bzsm
+	if not hasattr(T1,'MltE'):
+		T1.MltE = T1.MLTe
+	if hasattr(T1.nstep,'shape'):
+		_FlattenTrace(T1)
 	_SortModelDirection(T1)
 
 	s1 = np.zeros(T1.nstep)
